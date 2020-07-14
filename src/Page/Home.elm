@@ -15,6 +15,7 @@ import Html.Events exposing (onClick)
 import Http
 import Loading
 import Log
+import LineChart
 import Page
 import PaginatedList exposing (PaginatedList)
 import Session exposing (Session)
@@ -22,7 +23,6 @@ import Task exposing (Task)
 import Time
 import Url.Builder
 import Username exposing (Username)
-
 
 
 -- MODEL
@@ -37,6 +37,7 @@ type alias Model =
     -- Loaded independently from server
     , tags : Status (List Tag)
     , feed : Status Feed.Model
+    , mileMarks : List MileMarker
     }
 
 
@@ -51,6 +52,15 @@ type FeedTab
     = YourFeed Cred
     | GlobalFeed
     | TagFeed Tag
+
+type alias MileMarker
+    = 
+        {   
+            mile : Float
+        ,   elevation : Float
+        ,   marker : String
+        ,   state : String
+        } 
 
 
 init : Session -> ( Model, Cmd Msg )
@@ -73,6 +83,7 @@ init session =
       , feedPage = 1
       , tags = Loading
       , feed = Loading
+      , mileMarks = mileMarkerList
       }
     , Cmd.batch
         [ fetchFeed session feedTab 1
@@ -94,7 +105,7 @@ view model =
     { title = "Conduit"
     , content =
         div [ class "home-page" ]
-            [ viewBanner
+            [ viewBanner model
             , div [ class "container page" ]
                 [ div [ class "row" ]
                     [ div [ class "col-md-9" ] <|
@@ -142,13 +153,31 @@ view model =
             ]
     }
 
+mileChart : Html msg
+mileChart =
+  LineChart.view1 .mile .elevation
+    (List.sortBy .mile mileMarkerList)
 
-viewBanner : Html msg
-viewBanner =
+convertList : List MileMarker -> List String
+convertList nums =
+    List.map (\x -> String.fromFloat x.mile) nums
+
+convertMiles : List String -> List (Html msg)
+convertMiles markers =
+    List.map convertMile markers
+
+convertMile : String -> Html msg
+convertMile marker =
+    p [] [ text marker ]
+
+viewBanner : Model -> Html msg
+viewBanner model =
     div [ class "banner" ]
         [ div [ class "container" ]
-            [ h1 [ class "logo-font" ] [ text "conduit" ]
-            , p [] [ text "A place to share your knowledge." ]
+            [ h1 [ class "logo-font" ] [ text "AT Hiking Calculator" ]
+            , p [] [ text "Applachain Trail Buddy." ]
+            , div [] [mileChart]
+            -- , div [] (convertMiles <| convertList model.mileMarks)
             ]
         ]
 
@@ -367,6 +396,35 @@ fetchFeed session feedTabs page =
 articlesPerPage : Int
 articlesPerPage =
     10
+
+mileMarkerList : List (MileMarker)
+mileMarkerList =
+    [
+        { mile = 470, elevation = 1200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 44, elevation = 2200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1521, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1896, elevation = 100, marker = "mount katadin", state = "Kansas"}
+        , { mile = 949, elevation = 500, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1084, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 2147, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 2061, elevation = 800, marker = "mount katadin", state = "Kansas"}
+        , { mile = 736, elevation = 9200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1635, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 338, elevation = 7200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1427, elevation = 4200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 665, elevation = 2300, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1777, elevation = 2400, marker = "mount katadin", state = "Kansas"}
+        , { mile = 731, elevation = 2700, marker = "mount katadin", state = "Kansas"}
+        , { mile = 856, elevation = 7200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 592, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1896, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1032, elevation = 2200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1268, elevation = 3200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1065, elevation = 900, marker = "mount katadin", state = "Kansas"}
+        , { mile = 876, elevation = 200, marker = "mount katadin", state = "Kansas"}
+        , { mile = 171, elevation = 100, marker = "mount katadin", state = "Kansas"}
+        , { mile = 1210, elevation = 11200, marker = "mount katadin", state = "Kansas"}
+    ]
 
 
 scrollToTop : Task x ()
